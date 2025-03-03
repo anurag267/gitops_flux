@@ -24,7 +24,7 @@ enable_irsa                      = true
 create_iam_role                  = false
 iam_role_arn                     = module.eks_cluster_role.iam_role_arn
 create_node_iam_role             = true
-node_iam_role_name               = format("%s-%s-%s", local.eks_cluster_name, var.aws_region, "eksautomode-Role")
+node_iam_role_name               = format("%s-%s-%s", local.eks_cluster_name, var.aws_region, "eks-Role")
 
 cluster_compute_config = {
   enabled = true
