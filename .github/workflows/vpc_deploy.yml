@@ -18,15 +18,23 @@ on:
         description: 'CIDR block for the VPC'
         required: true
         default: '10.94.32.0/24'
+      tgw_id:
+        description: 'Transit Gateway ID'
+        required: false
+      number_of_azs:
+        description: 'Number of Availability Zones'
+        required: true
+        default: '2'
+
+
 env:
   aws_account_id: ${{ github.event.inputs.aws_account_id }}
   aws_region: ${{ github.event.inputs.aws_region }}
   vpc_name: ${{ github.event.inputs.vpc_name }}
   vpc_cidr: ${{ github.event.inputs.vpc_cidr }}
   number_of_azs: ${{ github.event.inputs.number_of_azs }}
-  step: ${{ github.event.inputs.step }}
   tgw_id: ${{ github.event.inputs.tgw_id }}
-  ipv6_enabled: ${{ github.event.inputs.ipv6_enabled }}
+  #ipv6_enabled: ${{ github.event.inputs.ipv6_enabled }}
 
 jobs:
   deploy_vpc:
@@ -43,28 +51,23 @@ jobs:
           mkdir temp
           cp -rf terraform/templates/vpc temp/"{{cookiecutter.generic.vpc_name}}"
           envsubst < terraform/config/vpc.yaml | yq -r > temp/cookiecutter.json
-run: |
-  source /opt/akhil/venv/bin/activate
-  mkdir temp
-  cp -rf terraform/templates/vpc temp/"{{cookiecutter.generic.vpc_name}}"
-  envsubst < terraform/config/vpc.yaml | yq -r > temp/cookiecutter.json
-  cd temp
-  cookiecutter --output-dir terraform_output --no-input . --overwrite-if-exists
+          cd temp
+          cookiecutter --output-dir terraform_output --no-input . --overwrite-if-exists
 
-  cd terraform_output/$vpc_name
-  terraform init -input=false -backend-config="backend/backend.hcl"
-  terraform plan -out $vpc_name.plan
-  terraform apply $vpc_name.plan
+          cd terraform_output/$vpc_name
+          terraform init -input=false -backend-config="backend/backend.hcl"
+          terraform plan -out $vpc_name.plan
+          terraform apply $vpc_name.plan
 
-- name: Resource Destroy
-  if: ${{ github.event.inputs.action == 'destroy' }}
-  run: |
-    source /opt/akhil/venv/bin/activate
-    mkdir temp
-    cp -rf terraform/templates/vpc temp/"{{cookiecutter.generic.vpc_name}}"
-    envsubst < terraform/config/vpc.yaml | yq -r > temp/cookiecutter.json
-    cd temp
-    cookiecutter --output-dir terraform_output --no-input . --overwrite-if-exists
+      - name: Resource Destroy
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        run: |
+          source /opt/akhil/venv/bin/activate
+          mkdir temp
+          cp -rf terraform/templates/vpc temp/"{{cookiecutter.generic.vpc_name}}"
+          envsubst < terraform/config/vpc.yaml | yq -r > temp/cookiecutter.json
+          cd temp
+          cookiecutter --output-dir terraform_output --no-input . --overwrite-if-exists
 
-    cd terraform_output/$vpc_name
-    terraform init -input=false -backend-config="backend/backend.hcl"
+          cd terraform_output/$vpc_name
+          terraform init -input=false -backend-config="backend/backend.hcl"
